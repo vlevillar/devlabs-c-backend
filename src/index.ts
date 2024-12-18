@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application, Response } from "express";
 import sequelize from "./database";
 import todoRoutes from "./routes/todos";
 
