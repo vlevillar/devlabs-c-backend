@@ -1,18 +1,28 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import Todo from "../models/Todo";
+
+const taskSchema = z.object({
+  title: z.string().min(1, { message: "Task title is required" }).max(100, { message: "Task title cannot exceed 100 characters" }),
+  userId: z.string().min(1, { message: "User ID is required" }), 
+});
 
 const router = Router();
 
-// @ts-ignore
+// Ruta GET 
+//@ts-ignore
 router.get("/", async (req: Request, res: Response) => {
   const userId = req.query.userId as string;
-  if (!userId) {
-    return res.status(400).json({ message: "User ID is required" });
+  
+  const result = taskSchema.safeParse({ userId });
+  if (!result.success) {
+    return res.status(400).json({ message: result.error.errors[0].message });
   }
+  
   try {
     const todos = await Todo.findAll({
       where: { userId },
-      order: [["id", "ASC"]], 
+      order: [["id", "ASC"]],
     });
     res.json(todos);
   } catch (error) {
@@ -20,12 +30,15 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// @ts-ignore
+//@ts-ignore
 router.post("/", async (req: Request, res: Response) => {
   const { title, userId } = req.body;
-  if (!userId) {
-    return res.status(400).json({ message: "User ID is required" });
+  
+  const result = taskSchema.safeParse({ title, userId });
+  if (!result.success) {
+    return res.status(400).json({ message: result.error.errors[0].message });
   }
+  
   try {
     const todo = await Todo.create({ title, userId });
     res.status(201).json(todo);
@@ -34,7 +47,7 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-// @ts-ignore
+//@ts-ignore
 router.put("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const { id } = req.params;
   const { title } = req.body;
@@ -51,7 +64,7 @@ router.put("/:id", async (req: Request<{ id: string }>, res: Response) => {
   }
 });
 
-// @ts-ignore
+//@ts-ignore
 router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const { id } = req.params;
   try {
