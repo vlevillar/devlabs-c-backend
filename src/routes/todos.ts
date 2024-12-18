@@ -3,7 +3,6 @@ import { z } from "zod";
 import Todo from "../models/Todo";
 
 const taskSchema = z.object({
-  title: z.string().min(1, { message: "Task title is required" }).max(100, { message: "Task title cannot exceed 100 characters" }),
   userId: z.string().min(1, { message: "User ID is required" }), 
 });
 
@@ -13,12 +12,15 @@ const router = Router();
 //@ts-ignore
 router.get("/", async (req: Request, res: Response) => {
   const userId = req.query.userId as string;
-  
+
+  console.log('Received userId:', userId);  // Imprimir el parámetro recibido
+
   const result = taskSchema.safeParse({ userId });
   if (!result.success) {
+    console.log('Validation Error:', result.error.errors);  // Mostrar el error de validación
     return res.status(400).json({ message: result.error.errors[0].message });
   }
-  
+
   try {
     const todos = await Todo.findAll({
       where: { userId },
@@ -29,6 +31,7 @@ router.get("/", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error retrieving tasks", error });
   }
 });
+
 
 //@ts-ignore
 router.post("/", async (req: Request, res: Response) => {
